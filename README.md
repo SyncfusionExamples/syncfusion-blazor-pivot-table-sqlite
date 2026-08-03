@@ -2,60 +2,57 @@
 
 ## Project Overview
 
-This repository demonstrates a production-ready pattern for binding an SQLite database to the Syncfusion Blazor Pivot Table using the URL Adaptor. The sample reads and manages order records stored in a SQLite table through an ASP.NET Core application and the Microsoft.Data.Sqlite provider.
+This repository demonstrates how to bind SQLite data to the Syncfusion Blazor Pivot Table through an ASP.NET Core API and the URL Adaptor. The sample uses the Microsoft.Data.Sqlite provider to load and persist records from an Orders table, while the Pivot Table consumes the API through SfDataManager.
 
-The implementation follows a clean data flow where the Pivot Table interacts with a web API endpoint, and the API uses SQLite commands to read and update data. This approach keeps the UI focused on analysis while the server handles data access and persistence.
+The implementation follows the current guide-based pattern where the UI requests data from the server, and the server handles SQLite access, validation, and CRUD operations. This keeps the component focused on aggregation and editing while the API manages persistence.
 
 ### Key Features
 
-- SQLite integration for lightweight local data storage
-- Syncfusion Blazor Pivot Table support for aggregation and drill-through
-- URL Adaptor-based remote data binding
-- CRUD operations through the API layer
+- SQLite-backed data source for a lightweight local sample
+- Syncfusion Blazor Pivot Table with URL Adaptor remote binding
+- CRUD operations exposed through API endpoints
+- Same-origin relative URLs for read and write requests
 - Primary key configuration for drill-through editing
-- Configurable development port through launch settings
+- Problem details middleware and exception handling for API failures
 
 ## Repository
 
-Sample Location : https://github.com/SyncfusionExamples/syncfusion-blazor-pivot-table-sqlite-database-binding-sample
+Sample location: https://github.com/SyncfusionExamples/syncfusion-blazor-pivot-table-sqlite-database-binding-sample
 
 ## Prerequisites
 
 | Component | Version | Purpose |
 |-----------|---------|---------|
-| Visual Studio 2022 / VS Code | Latest | Development IDE with Blazor workload |
-| .NET SDK | net10.0 or compatible | Runtime and build tools |
-| SQLite | 3.x or later | Local relational database engine |
-| Microsoft.Data.Sqlite | Latest | SQLite provider for .NET |
-| Syncfusion.Blazor.PivotTable | Latest | Pivot Table UI component |
-| Syncfusion.Blazor.Themes | Latest | Styling for the Pivot Table component |
-| Syncfusion.Blazor.Data | Latest | Data adaptors including URL Adaptor support |
-| Newtonsoft.Json | Latest | JSON serialization for CRUD models |
+| .NET SDK | 10.0 | Build and run the sample targeting net10.0 |
+| Visual Studio 2026 / VS Code | 18.0+ / latest | Development environment with ASP.NET and web workloads |
+| SQLite | 3.x or later | Database engine and tooling |
+| Microsoft.Data.Sqlite | 10.0.10 | SQLite provider for .NET |
+| Syncfusion.Blazor.PivotTable | 34.1.32 | Pivot Table UI component |
+| Syncfusion.Blazor.Themes | 34.1.32 | Pivot Table styling |
+| Newtonsoft.Json | 13.0.3 | JSON serialization for CRUD payloads |
 
 ## SQLite Setup
 
-### 1. Create the Database File
+### 1. Create the database file
 
 Create or point to an SQLite database file that will store the Orders table.
 
-### 2. Create the Table
+### 2. Create the table
 
 Use the following SQL to create the Orders table used by the sample:
 
 ```sql
 CREATE TABLE IF NOT EXISTS Orders
 (
-    OrderID        INTEGER PRIMARY KEY AUTOINCREMENT,
-    CustomerName   TEXT NULL,
-    EmployeeID     INTEGER NULL,
-    ShipCity       TEXT NULL,
-    Freight        REAL NULL
+    OrderID      INTEGER PRIMARY KEY AUTOINCREMENT,
+    CustomerName TEXT    NOT NULL,
+    EmployeeID   INTEGER NOT NULL,
+    ShipCity     TEXT    NULL,
+    Freight      REAL    NULL
 );
 ```
 
-### 3. Insert Sample Data (Optional)
-
-Seed the table with a few rows so the Pivot Table has data to render on first load:
+### 3. Insert sample data (optional)
 
 ```sql
 INSERT INTO Orders (CustomerName, EmployeeID, ShipCity, Freight) VALUES
@@ -66,9 +63,9 @@ INSERT INTO Orders (CustomerName, EmployeeID, ShipCity, Freight) VALUES
 ('Paul',   2, 'Tokyo',     64.75);
 ```
 
-### 4. Configure the Connection String
+### 4. Configure the connection string
 
-The connection string is defined in appsettings.json under the SQLite key:
+The application reads the SQLite connection string from appsettings.json:
 
 ```json
 {
@@ -78,21 +75,19 @@ The connection string is defined in appsettings.json under the SQLite key:
 }
 ```
 
-Update the value to point to your SQLite database file.
+Replace the placeholder with the actual database file name or a full absolute path such as `Data Source=C:/Data/Orders.db`.
 
 ## Project Structure
 
 | File/Folder | Purpose |
 |-------------|---------|
-| /Controllers/OrderController.cs | REST API controller exposing read and CRUD endpoints using SQLite commands |
+| /Controllers/OrderController.cs | API controller exposing read and CRUD endpoints using SQLite commands |
 | /Components/Pages/Home.razor | Pivot Table page with URL Adaptor configuration, editing, and drill-through setup |
-| /Program.cs | Service registration for ASP.NET Core and Syncfusion Blazor |
+| /Program.cs | ASP.NET Core and Syncfusion service registration, middleware, and endpoint mapping |
 | /appsettings.json | SQLite connection string configuration |
-| /PivotTableSQLite.csproj | Project file with Syncfusion Blazor packages and SQLite NuGet references |
+| /PivotTableSQLite.csproj | Project file with Syncfusion packages and SQLite NuGet references |
 
 ## Application Flow
-
-The sample follows a straightforward server-driven data flow:
 
 ```text
 Blazor Pivot Table
@@ -104,84 +99,76 @@ SQLite Connection
 SQLite Database
 ```
 
-1. The Pivot Table raises a data request through SfDataManager.
-2. SfDataManager posts the request to the URL Adaptor endpoint.
-3. The OrderController reads or modifies data through SQLite commands.
+1. The Pivot Table sends a request through SfDataManager.
+2. The URL Adaptor posts the request to the API endpoint.
+3. The controller resolves the request through SQLite commands.
 4. The response is returned to the client in the format expected by the Pivot Table.
 
-## Configuration Steps
+## Updated Implementation Notes
 
-### Connection String Setup
+### Program.cs
 
-Update the SQLite entry in appsettings.json to match the database file you want to use:
+The current sample uses the following ASP.NET Core configuration:
 
-```json
+```csharp
+builder.Services.AddSyncfusionBlazor();
+builder.Services.AddRazorComponents()
+    .AddInteractiveServerComponents();
+builder.Services.AddControllers();
+builder.Services.AddProblemDetails();
+
+app.UseExceptionHandler();
+app.UseHttpsRedirection();
+app.MapControllers();
+app.MapStaticAssets();
+app.MapRazorComponents<App>()
+    .AddInteractiveServerRenderMode();
+```
+
+### Home.razor
+
+The Pivot Table uses same-origin relative URLs and marks OrderID as the primary key for drill-through editing:
+
+```razor
+<SfDataManager Url="/api/Order"
+               InsertUrl="/api/Order/Insert"
+               UpdateUrl="/api/Order/Update"
+               RemoveUrl="/api/Order/Delete"
+               Adaptor="Adaptors.UrlAdaptor">
+</SfDataManager>
+```
+
+```csharp
+private void BeginDrillThrough(BeginDrillThroughEventArgs args)
 {
-  "ConnectionStrings": {
-    "SQLite": "Data Source=<DATABASE_FILE_NAME>"
-  }
+    for (int i = 0; i < args.GridObj.Columns.Count; i++)
+    {
+        if (args.GridObj.Columns[i].Field == "OrderID")
+        {
+            args.GridObj.Columns[i].IsPrimaryKey = true;
+        }
+        else
+        {
+            args.GridObj.Columns[i].Visible = true;
+        }
+    }
 }
 ```
 
-### Getting Started / Quick Start
-
-1. Clone or open the repository in Visual Studio or VS Code.
-2. Restore packages and build.
-
-   ```bash
-   dotnet restore
-   dotnet build
-   ```
-
-3. Create the SQLite database file and Orders table as described above.
-4. Run the application.
-
-   ```bash
-   dotnet run --project PivotTableSQLite
-   ```
-
-5. Open the local URL displayed in the terminal.
-
 ## CRUD Operations
 
-The sample supports full CRUD operations through the URL Adaptor. Each operation is handled by a dedicated controller endpoint and persisted by SQLite.
+The sample supports read, insert, update, and delete operations through the URL Adaptor.
 
-### Read
-
-Purpose: Load the orders collection for the Pivot Table.
-
-Flow: The Pivot Table posts a DataManagerRequest to POST /api/Order. The controller retrieves the records through SQLite.
-
-### Insert
-
-Purpose: Add a new order record.
-
-Flow: The Pivot Table posts a new record to POST /api/Order/Insert. The controller validates the data and inserts it into the SQLite table.
-
-### Update
-
-Purpose: Modify an existing order record.
-
-Flow: The Pivot Table posts updated values to POST /api/Order/Update. The controller locates the record and updates it.
-
-### Delete
-
-Purpose: Remove an existing order record.
-
-Flow: The Pivot Table sends a delete request to POST /api/Order/Delete. The controller removes the record from the SQLite table.
-
-## API Endpoints
-
-| Endpoint | HTTP Method | Request Body | Description |
-|----------|-------------|--------------|-------------|
-| /api/Order | POST | DataManagerRequest | Returns the Orders collection as { result, count } for Pivot Table binding |
-| /api/Order/Insert | POST | CRUDModel<Order> | Inserts a new order record into SQLite |
-| /api/Order/Update | POST | CRUDModel<Order> | Updates an existing order record in SQLite |
-| /api/Order/Delete | POST | CRUDModel<Order> | Deletes an order record from SQLite using the Key field |
+| Endpoint | Method | Payload | Description |
+|----------|--------|---------|-------------|
+| /api/Order | POST | DataManagerRequest | Returns `{ result, count }` for Pivot Table binding |
+| /api/Order/Insert | POST | CRUDModel<Order> | Inserts a new order and returns the created row |
+| /api/Order/Update | POST | CRUDModel<Order> | Updates an existing order |
+| /api/Order/Delete | POST | CRUDModel<Order> | Deletes an order using the key value |
 
 ## Data Model
 
-The Order model represents a single row in the SQLite Orders table:
+The Order model used by the controller and Razor page is:
 
 ```csharp
 public class Order
@@ -194,14 +181,25 @@ public class Order
 }
 ```
 
-| Field | Type | Pivot Role | Description |
-|-------|------|-----------|-------------|
-| OrderID | int | Primary Key | Unique identifier for the order |
-| CustomerName | string | Row | Customer name used as a pivot row field |
-| EmployeeID | int | Column | Employee ID used as a pivot column field |
-| Freight | decimal | Value | Freight amount used as the pivot value |
-| ShipCity | string | Dimension | Ship city used as an additional pivot field |
+## Getting Started
+
+1. Clone or open the repository in Visual Studio or VS Code.
+2. Restore packages and build:
+
+   ```bash
+   dotnet restore
+   dotnet build
+   ```
+
+3. Create the SQLite database file and Orders table as described above.
+4. Run the application:
+
+   ```bash
+   dotnet run --project PivotTableSQLite
+   ```
+
+5. Open the local URL shown in the terminal and verify that the Pivot Table loads and the CRUD endpoints respond correctly.
 
 ## Full Documentation
 
-For step-by-step guidance on integrating SQLite with the Syncfusion Blazor Pivot Table, including URL Adaptor configuration, CRUD operations, and database connectivity, see the official Syncfusion Blazor Pivot Table documentation.
+For the complete step-by-step guide, including URL Adaptor configuration, CRUD mappings, and SQLite connection setup, see the official Syncfusion Blazor Pivot Table documentation.

@@ -2,8 +2,8 @@
 using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.Sqlite;
-using Syncfusion.Blazor.Data;
 using Syncfusion.Blazor;
+using Syncfusion.Blazor.Data;
 
 namespace PivotTableSQLite.Controllers
 {
@@ -110,6 +110,12 @@ namespace PivotTableSQLite.Controllers
                 order.ShipCity ?? (object)DBNull.Value);
 
             command.ExecuteNonQuery();
+
+            using SqliteCommand keyCommand = new(
+                "SELECT last_insert_rowid();",
+                connection);
+
+            order.OrderID = Convert.ToInt32(keyCommand.ExecuteScalar());
 
             return Ok(order);
         }
@@ -237,5 +243,6 @@ namespace PivotTableSQLite.Controllers
             [JsonPropertyName("params")]
             public IDictionary<string, object>? Params { get; set; }
         }
+
     }
 }
