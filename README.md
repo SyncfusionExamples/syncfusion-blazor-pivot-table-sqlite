@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-This repository demonstrates how to bind SQLite data to the Syncfusion Blazor Pivot Table through an ASP.NET Core API and the URL Adaptor. The sample uses the Microsoft.Data.Sqlite provider to load and persist records from an Orders table, while the Pivot Table consumes the API through SfDataManager.
+This repository demonstrates how to bind SQLite data to the Syncfusion [Blazor Pivot Table](https://www.syncfusion.com/blazor-components/blazor-pivot-table) through an ASP.NET Core API and the URL Adaptor. The sample uses the Microsoft.Data.Sqlite provider to load and persist records from an Orders table, while the Pivot Table consumes the API through SfDataManager.
 
 The implementation follows the current guide-based pattern where the UI requests data from the server, and the server handles SQLite access, validation, and CRUD operations. This keeps the component focused on aggregation and editing while the API manages persistence.
 
@@ -202,4 +202,13 @@ public class Order
 
 ## Full Documentation
 
-For the complete step-by-step guide, including URL Adaptor configuration, CRUD mappings, and SQLite connection setup, see the official Syncfusion Blazor Pivot Table documentation.
+For the complete step-by-step guide, including URL Adaptor configuration, CRUD mappings, and SQLite connection setup, see the official Syncfusion Blazor Pivot Table documentation: https://help.syncfusion.com/grid-sdk/blazor/pivot-table/connecting-to-data-source/sqlite-server
+
+## Support and Feedback
+
+- For general product questions, visit the [Syncfusion Community Forum](https://www.syncfusion.com/forums) or [Syncfusion Support](https://www.syncfusion.com/support).
+- To report an issue specific to this sample, open a GitHub issue in this repository.
+
+## License
+
+This is a Syncfusion sample project provided to demonstrate product usage. Review the [Syncfusion license terms](https://www.syncfusion.com/sales/pricing?category=ui-components) before using Syncfusion components in your own applications.
